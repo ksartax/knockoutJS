@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="sammy.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div data-bind="template: { name : 'nav'}"></div>
+                    <div data-bind="template:  { name : $root.choseRouterId()}"></div>
+                </div>
+            </div>
+
+            <script type="text/html" id="nav">
+                <nav class="navbar navbar-default">
+                    <div class="container-fluid">
+                        <div class="navbar-header">
+                            <a class="navbar-brand" href="#" data-bind="text: title"></a>
+                        </div>
+                        <ul class="nav navbar-nav" data-bind="foreach: routes">
+                            <li><a href="#" data-bind="text: $data, click: $root.goToRoute"></a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </script>  
+            
+            <script type="text/html" id="Klienci"> 
+                <div class="row">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-4">
+                        <table class="table">
+                            <thead>
+                                <tr >
+                                    <th style="text-align: center">Imie</th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: customers">
+                                <tr style="text-align: center">
+                                    <td>
+                                        <span data-bind="text: imie"></span>
+                                        <button data-bind="click: () => $root.deleteUser(id)"> Kasuj </button>
+                                        <button data-bind="click: () => $root.updateUser(id)"> Edytuj </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-sm-4"></div>
+                </div>
+            </script>
+            
+            <script type="text/html" id="Strona_Główna"> 
+                <div class="row">
+                    <div class="col-sm-1"></div>
+                    <div class="col-sm-10">
+                        <h1>
+                            Prosta Strona z Wykożystaniem Knockout @Damian Stępniak
+                        </H1>
+                    <div class="col-sm-1"></div>
+                </div>
+            </script>
+
+            <script type="text/html" id="Dodaj_Klinta"> 
+                <div class="row">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-4">
+                        
+                            <div class="form-group">
+                                <label for="imie">Imie:</label>
+                                <input type="text" class="form-control" id="imieInput" itemid="" data-bind="value: userName" >
+                                <div> </div>
+                            </div>
+  
+                            <button data-bind="click : () => $root.addUser()" class="btn btn-default">Zapisz</button>
+                            
+                    </div>
+                    <div class="col-sm-4"></div>
+                </div>
+            </script>
+            
+            <script>
+                
+                var data = [
+                    {id : 1, imie : 'Seba'},
+                    {id : 2, imie : 'MAtia'},
+                    {id : 3, imie : 'Kuba'},
+                    {id : 4, imie : 'Ferder'},
+                    {id : 5, imie : 'SMI'},
+                ]
+                
+                class User
+                {
+                    constructor(imie, id){
+                        this.imie = imie;
+                        this.id = id;
+                    }
+                }
+                
+                function App(){
+                    
+                    var self = this;
+                    self.title = "Demo Aplikacja KnockoutJS :X"
+                    self.routes = [
+                        'Strona_Główna',
+                        'Klienci',
+                        'Dodaj_Klinta'
+                    ];
+                    
+                    self.userName = ko.observable();
+                    self.choseRouterId = ko.observable();
+                    self.choseRouterData = ko.observable();
+                    self.customers = ko.observableArray(data);
+                    
+                    self.goToRoute = function(route){
+                        location.hash = route;
+                    };
+                    
+                    self.addUser = function(){
+                        var id = $("#imieInput").attr('itemid');
+                        if(id !== ""){
+                            for(var i = 0; i<self.customers().length; i++){
+                            if(self.customers()[i]['id'] == id){
+                                self.customers()[i]['imie'] = self.userName();
+                                self.customers()[i]['id'] = $("#imieInput").attr('itemid');
+                                console.log(self.customers()[i]);
+                                break;
+                            }
+                        }
+                        }else{
+                          var user = new User(self.userName(),self.customers()[self.customers().length-1]['id']++);
+                          self.customers.push(user);
+                        }
+                    };
+                    
+                    self.updateUser = function(id){
+                        self.goToRoute('Dodaj_Klinta');
+                        var user = null;
+                        for(var i = 0; i<self.customers().length; i++){
+                            if(self.customers()[i]['id'] == id){
+                                user = new User(self.customers()[i].imie, self.customers()[i].id); 
+                                break;
+                            }
+                        }
+                        $("#imieInput").attr('itemid',user.id).val(user.imie);
+                    };
+                    
+                    self.deleteUser = function(id){
+                        self.customers.remove( function (item) { return item.id == id; } );
+                    }
+                    
+                    Sammy(function (){
+                        this.get("#:home", function(){
+                            self.choseRouterId(this.params.home);
+                            self.choseRouterData(null);
+                        });
+                        this.get('',function(){
+                            self.choseRouterId("Strona_Główna");
+                        });
+                    }).run();
+                    
+                };
+                
+                ko.applyBindings(new App());
+            </script>    
+
+        </div>
+    </body>
+</html>
